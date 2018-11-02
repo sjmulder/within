@@ -1,0 +1,41 @@
+.Dd November 2, 2018
+.Dt WITHIN 1
+.Os
+.Sh NAME
+.Nm within
+.Nd run a command in other directories
+.Sh SYNOPSIS
+.Nm
+.Op Fl j Ar jobs
+.Ar directories
+.Fl -
+.Ar command
+.Sh DESCRIPTION
+Runs the given
+.Ar command
+in all given
+.Ar directories ,
+prepending directory names to output:
+.Bd -literal -offset indent
+$ within msort trickle -- make clean
+msort: rm -f *.o msort
+trickle: rm -f trickle tritty
+.Ed
+.Pp
+When a single directory is given the
+.Fl Fl
+may be omitted:
+.Bd -literal -offset indent
+$ within code/msort git status
+code/msort: nothing to commit, working tree clean
+.Ed
+.Pp
+The
+.Fl j
+option specifies how many commands may be run simultaneously.
+The default is 1.
+.Sh SEE ALSO
+.Lk https://github.com/sjmulder/within Website
+.Sh AUTHORS
+.An Sijmen J. Mulder
+.Aq Mt ik@sjmulder.nl
