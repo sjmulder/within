@@ -18,4 +18,4 @@ uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/within
 	rm -f $(DESTDIR)$(MANPREFIX)/man1/within.1
 
-.PHONY: all clean
+.PHONY: all clean install uninstall
