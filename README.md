@@ -43,10 +43,14 @@ Running
 
 Requires an OS with kqueue, e.g. any BSD or macOS but not Linux or Windows.
 
+Mac users can install from
+[my Homebrew tap](https://github.com/sjmulder/homebrew-tap)
+
+    brew install sjmulder/tap/within
+
+To compile, install and uninstal from source:
+
     make
-
-To install and uninstall:
-
     make install   [DESTDIR=] [PREFIX=/usr/local] [MANPREFIX=PREFIX/man]
     make uninstall [DESTDIR=] [PREFIX=/usr/local] [MANPREFIX=PREFIX/man]
 
