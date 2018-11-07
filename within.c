@@ -76,6 +76,10 @@ main(int argc, char **argv)
 	int num_jobs = 0;
 	struct kevent event;
 
+#if defined(__OpenBSD__)
+	pledge("stdio fork exec", NULL);
+#endif
+
 	parse_options(argc, argv);
 
 	if ((queue = kqueue()) == -1)
