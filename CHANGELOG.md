@@ -1,5 +1,5 @@
-TBD
----
+1.1 (2018-11-11)
+----------------
 
  - Greatly enhanced portability (specifically to Linux) by switching from
    kqueue to select.
