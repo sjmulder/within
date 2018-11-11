@@ -28,20 +28,23 @@ The default is 1.
 Implementation
 --------------
 
-Based around a kqueue event loop. As many jobs are started as -j allows (1
-by default), forking, descending into the given directory and executing the
-command. For each job, both standard output and standard error are
+Based around a select() event loop. As many jobs are started as **-j** allows
+(1 by default), forking, descending into the given directory and executing
+the command. For each job, both standard output and standard error are
 redirected to a pipe that's read by a 'piper' which adds the 'directory:'
 prefixes to the output. These pipers are effectively coroutines.
 
 The event loop waits for finished jobs, starting new ones if there are
 directories left, and for data on the pipes.
 
+The select() specific code should be fairly easy to swap out. Point in
+case, originally kqueue was used.
+
 
 Running
 -------
 
-Requires an OS with kqueue, e.g. any BSD or macOS but not Linux or Windows.
+Should work with any Unix, including Linux and macOS.
 
 Mac users can install from
 [my Homebrew tap](https://github.com/sjmulder/homebrew-tap)

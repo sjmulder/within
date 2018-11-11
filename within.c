@@ -19,47 +19,51 @@
 /*
  * Implementation notes
  *
- * Based around a kqueue event loop. As many jobs are started as -j allows (1
- * by default), forking, descending into the given directory and executing the
- * command. For each job, both standard output and standard error are
+ * Based around a select() event loop. As many jobs are started as -j allows
+ * (1 by default), forking, descending into the given directory and executing
+ * the command. For each job, both standard output and standard error are
  * redirected to a pipe that's read by a 'piper' which adds the 'directory:'
  * prefixes to the output. These pipers are effectively coroutines.
  *
  * The event loop waits for finished jobs, starting new ones if there are
  * directories left, and for data on the pipes.
  *
- * All kqueue specific code is in main() the register/deregister functions
- * and it should be possible to swap this out for a different system.
+ * The select() specific code should be fairly easy to swap out. Point in
+ * case, originally kqueue was used.
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <errno.h>
 #include <string.h>
 
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/event.h>
+#include <sys/select.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 #include <err.h>
 #include <getopt.h>
+#include <signal.h>
+#include <fcntl.h>
 
-/* stored as .udata in the EVFILT_READ kevents */
+#define MAX(a,b) ((a)>(b)?(a):(b))
+
 struct piper {
 	int in_fd;
 	FILE *out_file;
 	const char *prefix;	/* directory name */
 	bool newline;		/* 1 if last character was a newline */
+	struct piper *next;	/* 't is but a linked list! */
 };
 
 static void parse_options(int, char **);
 static void usage(void);
-static void register_job(pid_t);
-static void register_piper(struct piper *);
-static void deregister_piper(struct piper *);
 static void start_job(const char *);
 static void start_piper(int, FILE *, const char *);
-static void run_piper(struct piper *, size_t);
+static void run_piper(struct piper *);
+static void remove_piper(struct piper *);
+static void sig_chld(int);
 
 /* command line options */
 static int max_jobs = 1;
@@ -67,14 +71,19 @@ static int num_directories;
 static char **directories;
 static char **command;
 
-static int queue;
+struct piper *pipers;
 
 int
 main(int argc, char **argv)
 {
 	int directory = 0;
 	int num_jobs = 0;
-	struct kevent event;
+	fd_set piper_fds;
+	struct piper *piper;
+	int nfds;
+	int status = 0;
+	int child_status;
+	pid_t child_pid;
 
 #if defined(__OpenBSD__)
 	pledge("stdio fork exec", NULL);
@@ -82,36 +91,47 @@ main(int argc, char **argv)
 
 	parse_options(argc, argv);
 
-	if ((queue = kqueue()) == -1)
-		err(1, "kqueue");
+	signal(SIGCHLD, sig_chld);
 
 	while (num_jobs || directory < num_directories) {
+		/* start new jobs */
+
 		while (num_jobs < max_jobs && directory < num_directories) {
 			start_job(directories[directory]);
 			num_jobs++;
 			directory++;
 		}
 
-		if (kevent(queue, NULL, 0, &event, 1, NULL) == -1)
-			err(1, "polling kevent");
+		/* wait for data or SIGCHLD interrupt */
 
-		switch (event.filter) {
-		case EVFILT_PROC:
+		FD_ZERO(&piper_fds);
+		for (piper = pipers; piper; piper = piper->next) {
+			FD_SET(piper->in_fd, &piper_fds);
+			nfds = MAX(nfds, piper->in_fd+1);
+		}
+
+		if (select(nfds, &piper_fds, NULL, NULL, NULL) != -1) {
+			for (piper = pipers; piper; piper = piper->next)
+				if (FD_ISSET(piper->in_fd, &piper_fds))
+					run_piper(piper);
+		} else if (errno != EINTR)
+			err(1, "select");
+
+		/* collect child exits */
+
+		while (num_jobs) {
+			child_pid = waitpid(WAIT_ANY, &child_status, WNOHANG);
+			if (child_pid == -1)
+				err(1, "waitpid");
+			if (child_pid == 0)
+				break;
 			num_jobs--;
-			break;
-
-		case EVFILT_READ:
-			run_piper(event.udata, (size_t)event.data);
-			
-			if (event.flags & EV_EOF) {
-				deregister_piper(event.udata);
-				close(((struct piper *)event.udata)->in_fd);
-				free(event.udata);
-			}
-			
-			break;
+			if (child_status)
+				status = 1; /* safer than child_status */
 		}
 	}
+
+	return status;
 }
 
 static void
@@ -164,51 +184,6 @@ usage(void)
 }
 
 static void
-register_job(pid_t pid)
-{
-	struct kevent change;
-
-	memset(&change, 0, sizeof(change));
-	change.ident = pid;
-	change.filter = EVFILT_PROC;
-	change.flags = EV_ADD | EV_ENABLE | EV_ONESHOT;
-	change.fflags = NOTE_EXIT;
-
-	if (kevent(queue, &change, 1, NULL, 0, NULL) == -1)
-		err(1, "adding exit kevent");
-}
-
-static void
-register_piper(struct piper *piper)
-{
-	struct kevent change;
-	
-	memset(&change, 0, sizeof(change));
-	change.ident = piper->in_fd;
-	change.filter = EVFILT_READ;
-	change.flags = EV_ADD | EV_ENABLE;
-	change.udata = piper;
-	
-	if (kevent(queue, &change, 1, NULL, 0, NULL) == -1)
-		err(1, "adding file kevent");
-}
-
-static void
-deregister_piper(struct piper *piper)
-{
-	struct kevent change;
-	
-	memset(&change, 0, sizeof(change));
-	change.ident = piper->in_fd;
-	change.filter = EVFILT_READ;
-	change.flags = EV_DELETE;
-	change.udata = piper;
-	
-	if (kevent(queue, &change, 1, NULL, 0, NULL) == -1)
-		err(1, "removing file kevent");
-}
-
-static void
 start_job(const char *directory)
 {
 	int stdout_pipe[2];
@@ -243,8 +218,6 @@ start_job(const char *directory)
 		close(stdout_pipe[1]);
 		close(stderr_pipe[1]);
 
-		register_job(pid);
-			
 		start_piper(stdout_pipe[0], stdout, directory);
 		start_piper(stderr_pipe[0], stderr, directory);
 		break;
@@ -255,6 +228,7 @@ static void
 start_piper(int in_fd, FILE *out_file, const char *prefix)
 {
 	struct piper *piper;
+	int flags;
 	
 	if (!(piper = malloc(sizeof(*piper))))
 		err(1, "malloc");
@@ -264,27 +238,59 @@ start_piper(int in_fd, FILE *out_file, const char *prefix)
 	piper->out_file = out_file;
 	piper->prefix = prefix;
 	piper->newline = 1;
-	
-	register_piper(piper);
+
+	if ((flags = fcntl(in_fd, F_GETFL)) == -1)
+		err(1, "F_GETFL");
+	if (fcntl(in_fd, F_SETFL, flags | O_NONBLOCK) == -1)
+		err(1, "F_SETFL");
+
+	/* add to list */
+	piper->next = pipers;
+	pipers = piper;
 }
 
 static void
-run_piper(struct piper *piper, size_t num_readable)
+run_piper(struct piper *piper)
 {
-	char *data;
+	char buf[4096];
 	ssize_t num_read, i;
 
-	if (!(data = malloc(num_readable)))
-		err(1, "malloc");
-	if ((num_read = read(piper->in_fd, data, num_readable)) == -1)
-		err(1, "read");
+	while ((num_read = read(piper->in_fd, buf, sizeof(buf))) != -1) {
+		if (num_read == 0)
+			break;
+		if (num_read == 0) {
+			remove_piper(piper);
+			break;
+		}
 
-	for (i = 0; i < num_read; i++) {
-		if (piper->newline)
-			fprintf(piper->out_file, "%s: ", piper->prefix);
-		fputc(data[i], piper->out_file);
-		piper->newline = data[i] == '\n';
+		for (i = 0; i < num_read; i++) {
+			if (piper->newline)
+				fprintf(piper->out_file, "%s: ",
+				    piper->prefix);
+			fputc(buf[i], piper->out_file);
+			piper->newline = buf[i] == '\n';
+		}
 	}
+}
 
-	free(data);
+static void
+remove_piper(struct piper *piper)
+{
+	struct piper **pp;
+
+	for (pp = &pipers; *pp; pp = &(*pp)->next) {
+		if (*pp == piper) {
+			*pp = piper->next;
+			free(piper);
+			break;
+		}
+	}
+}
+
+static void
+sig_chld(int sig)
+{
+	(void)sig;
+
+	/* nothing, we just want select() interrupted */
 }
