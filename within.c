@@ -105,6 +105,7 @@ main(int argc, char **argv)
 		/* wait for data or SIGCHLD interrupt */
 
 		FD_ZERO(&piper_fds);
+		nfds = 0;
 		for (piper = pipers; piper; piper = piper->next) {
 			FD_SET(piper->in_fd, &piper_fds);
 			nfds = MAX(nfds, piper->in_fd+1);
