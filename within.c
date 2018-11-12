@@ -160,7 +160,7 @@ parse_options(int argc, char **argv)
 
 	for (i = 0; i < argc; i++) {
 		/* directories separated from command with - or -- */
-		if (strcmp("-", argv[i]) || strcmp("--", argv[i]))
+		if (strcmp("-", argv[i]) && strcmp("--", argv[i]))
 			continue;
 		if (i < 1 || i+1 >= argc)
 			usage();
