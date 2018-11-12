@@ -1,5 +1,5 @@
-TBD
----
+1.1.1 (2018-11-12)
+------------------
 
  - New: 'make check' target.
  - New: musl libc compatibility.
