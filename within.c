@@ -93,7 +93,7 @@ main(int argc, char **argv)
 
 	signal(SIGCHLD, sig_chld);
 
-	while (num_jobs || directory < num_directories) {
+	while (num_jobs || pipers || directory < num_directories) {
 		/* start new jobs */
 
 		while (num_jobs < max_jobs && directory < num_directories) {
