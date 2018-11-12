@@ -257,14 +257,7 @@ run_piper(struct piper *piper)
 	char buf[4096];
 	ssize_t num_read, i;
 
-	while ((num_read = read(piper->in_fd, buf, sizeof(buf))) != -1) {
-		if (num_read == 0)
-			break;
-		if (num_read == 0) {
-			remove_piper(piper);
-			break;
-		}
-
+	while ((num_read = read(piper->in_fd, buf, sizeof(buf))) > 0) {
 		for (i = 0; i < num_read; i++) {
 			if (piper->newline)
 				fprintf(piper->out_file, "%s: ",
@@ -273,6 +266,11 @@ run_piper(struct piper *piper)
 			piper->newline = buf[i] == '\n';
 		}
 	}
+
+	if (num_read == 0)
+		remove_piper(piper);
+	else if (num_read == -1 && errno != EAGAIN)
+		err(1, "read");
 }
 
 static void

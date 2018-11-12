@@ -3,6 +3,7 @@ TBD
 
  - Separator between directories and command changed to single hyphen
    as GNU libc getopt() eats the double hyphen.
+ - Read errors are now properly reported.
 
 
 1.1 (2018-11-11)
