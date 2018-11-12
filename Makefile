@@ -6,6 +6,9 @@ CFLAGS += -Wall -Wextra
 
 all: within
 
+check: within
+	test `./within . . - pwd | wc -l` -eq 2
+
 clean:
 	rm -f within
 
@@ -18,4 +21,4 @@ uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/within
 	rm -f $(DESTDIR)$(MANPREFIX)/man1/within.1
 
-.PHONY: all clean install uninstall
+.PHONY: all check clean install uninstall
