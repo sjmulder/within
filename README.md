@@ -3,7 +3,7 @@ within
 
 Run a command in other directories:
 
-**within** [**-j** *jobs*] *directories* **--** *command*
+**within** [**-j** *jobs*] *directories* **-** *command*
 
 
 Description
@@ -12,7 +12,7 @@ Description
 Runs the given *command* in all given *directories*,
 prepending directory names to output:
 
-    $ within msort trickle -- make clean
+    $ within msort trickle - make clean
     msort: rm -f *.o msort
     trickle: rm -f trickle tritty
 

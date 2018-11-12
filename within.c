@@ -159,7 +159,8 @@ parse_options(int argc, char **argv)
 		usage();
 
 	for (i = 0; i < argc; i++) {
-		if (strcmp("--", argv[i]) != 0)
+		/* directories separated from command with - or -- */
+		if (strcmp("-", argv[i]) || strcmp("--", argv[i]))
 			continue;
 		if (i < 1 || i+1 >= argc)
 			usage();
@@ -179,7 +180,7 @@ parse_options(int argc, char **argv)
 static void
 usage(void)
 {
-	fprintf(stderr, "usage: within [-j jobs] directory [... --] command "
+	fprintf(stderr, "usage: within [-j jobs] directory [... -] command "
 	    "...\n");
 	exit(1);
 }

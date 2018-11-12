@@ -8,7 +8,7 @@
 .Nm
 .Op Fl j Ar jobs
 .Ar directories
-.Fl -
+.Fl
 .Ar command
 .Sh DESCRIPTION
 Runs the given
@@ -17,13 +17,13 @@ in all given
 .Ar directories ,
 prepending directory names to output:
 .Bd -literal -offset indent
-$ within msort trickle -- make clean
+$ within msort trickle - make clean
 msort: rm -f *.o msort
 trickle: rm -f trickle tritty
 .Ed
 .Pp
 When a single directory is given the
-.Fl Fl
+.Fl
 may be omitted:
 .Bd -literal -offset indent
 $ within code/msort git status
