@@ -121,7 +121,7 @@ main(int argc, char **argv)
 		/* collect child exits */
 
 		while (num_jobs) {
-			child_pid = waitpid(WAIT_ANY, &child_status, WNOHANG);
+			child_pid = waitpid(-1, &child_status, WNOHANG);
 			if (child_pid == -1)
 				err(1, "waitpid");
 			if (child_pid == 0)
