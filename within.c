@@ -80,6 +80,7 @@ main(int argc, char **argv)
 	int num_jobs = 0;
 	fd_set piper_fds;
 	struct piper *piper;
+	struct piper *piper_next;
 	int nfds;
 	int status = 0;
 	int child_status;
@@ -112,9 +113,13 @@ main(int argc, char **argv)
 		}
 
 		if (select(nfds, &piper_fds, NULL, NULL, NULL) != -1) {
-			for (piper = pipers; piper; piper = piper->next)
+			for (piper = pipers; piper; piper = piper_next) {
+				/* dereference now, prevent use after free */
+				piper_next = piper->next;
+
 				if (FD_ISSET(piper->in_fd, &piper_fds))
 					run_piper(piper);
+			}
 		} else if (errno != EINTR)
 			err(1, "select");
 

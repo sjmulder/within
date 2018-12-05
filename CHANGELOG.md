@@ -1,3 +1,9 @@
+TBD
+---
+
+ - Fixed: use-after-free of piper in list walk.
+
+
 1.1.1 (2018-11-12)
 ------------------
 
