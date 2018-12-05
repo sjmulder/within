@@ -3,6 +3,7 @@ TBD
 
  - Fixed: use-after-free of piper in list walk.
  - Fixed: EBADF caused by race condition.
+ - Fixed: EMFILE caused by broken pipes left open.
 
 
 1.1.1 (2018-11-12)

@@ -295,6 +295,9 @@ remove_piper(struct piper *piper)
 {
 	struct piper **pp;
 
+	if (close(piper->in_fd) == -1 && errno != EBADF)
+		err(1, "close");
+
 	for (pp = &pipers; *pp; pp = &(*pp)->next) {
 		if (*pp == piper) {
 			*pp = piper->next;
