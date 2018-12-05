@@ -2,6 +2,7 @@ TBD
 ---
 
  - Fixed: use-after-free of piper in list walk.
+ - Fixed: EBADF caused by race condition.
 
 
 1.1.1 (2018-11-12)

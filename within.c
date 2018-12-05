@@ -120,6 +120,18 @@ main(int argc, char **argv)
 				if (FD_ISSET(piper->in_fd, &piper_fds))
 					run_piper(piper);
 			}
+		} else if (errno == EBADF) {
+			/* broken pipe, process exited before select() */\
+			for (piper = pipers; piper; piper = piper_next) {
+				/* dereference now, prevent use after free */
+				piper_next = piper->next;
+
+				if (fcntl(piper->in_fd, F_GETFL) == -1) {
+					if (errno != EBADF)
+						err(1, "fcntl");
+					remove_piper(piper);
+				}
+			}
 		} else if (errno != EINTR)
 			err(1, "select");
 
