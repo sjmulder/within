@@ -1,5 +1,5 @@
-TBD
----
+1.1.2 (2018-12-06)
+------------------
 
  - Fixed: use-after-free of piper in list walk.
  - Fixed: EBADF caused by race condition.
