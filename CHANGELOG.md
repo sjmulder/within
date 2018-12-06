@@ -1,3 +1,7 @@
+TBD
+---
+ - Fixed: wrong implicit permissions on installed files.
+
 1.1.2 (2018-12-06)
 ------------------
  - Fixed: use-after-free of piper in list walk.

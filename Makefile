@@ -14,8 +14,8 @@ clean:
 
 install: within
 	install -d $(DESTDIR)$(PREFIX)/bin $(DESTDIR)$(MANPREFIX)/man1
-	install within $(DESTDIR)$(PREFIX)/bin/
-	install within.1 $(DESTDIR)$(MANPREFIX)/man1/
+	install -m755 within $(DESTDIR)$(PREFIX)/bin/
+	install -m644 within.1 $(DESTDIR)$(MANPREFIX)/man1/
 
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/within
