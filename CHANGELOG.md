@@ -1,5 +1,5 @@
-TBD
----
+1.1.3 (2018-12-06)
+------------------
  - Fixed: wrong implicit permissions on installed files.
 
 1.1.2 (2018-12-06)
