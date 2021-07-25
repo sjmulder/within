@@ -1,0 +1,5 @@
+image: debian/stable
+sources:
+ - https://github.com/sjmulder/within
+tasks:
+ - build: cd within && make all check

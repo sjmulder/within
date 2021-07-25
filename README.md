@@ -1,5 +1,9 @@
 within
 ======
+[![Build status](
+ https://builds.sr.ht/~sjmulder/within.svg)](
+ https://builds.sr.ht/~sjmulder/within)
+
 Run a command in other directories:
 
 **within** [**-j** *jobs*] *directories* **-** *command*
