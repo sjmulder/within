@@ -1,3 +1,8 @@
+TBD
+---
+ - Change: license changed from AGPL-3 to 2-clause BSD.
+ - Change: switched from Travis CI to builds.sr.ht.
+
 1.1.3 (2018-12-06)
 ------------------
  - Fixed: wrong implicit permissions on installed files.
