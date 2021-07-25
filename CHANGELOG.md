@@ -1,5 +1,5 @@
-TBD
----
+1.1.4 (2021-07-26)
+------------------
  - Change: license changed from AGPL-3 to 2-clause BSD.
  - Change: switched from Travis CI to builds.sr.ht.
 
