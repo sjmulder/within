@@ -1,14 +1,11 @@
 within
 ======
-
 Run a command in other directories:
 
 **within** [**-j** *jobs*] *directories* **-** *command*
 
-
 Description
 -----------
-
 Runs the given *command* in all given *directories*,
 prepending directory names to output:
 
@@ -24,10 +21,8 @@ When a single directory is given the **--** may be omitted:
 The **-j** option specifies how many commands may be run simultaneously.
 The default is 1.
 
-
 Implementation
 --------------
-
 Based around a select() event loop. As many jobs are started as **-j** allows
 (1 by default), forking, descending into the given directory and executing
 the command. For each job, both standard output and standard error are
@@ -40,10 +35,8 @@ directories left, and for data on the pipes.
 The select() specific code should be fairly easy to swap out. Point in
 case, originally kqueue was used.
 
-
 Running
 -------
-
 Should work with any Unix, including Linux and macOS.
 
 Mac users can install from
@@ -57,10 +50,8 @@ To compile, install and uninstal from source:
     make install   [DESTDIR=] [PREFIX=/usr/local] [MANPREFIX=PREFIX/man]
     make uninstall [DESTDIR=] [PREFIX=/usr/local] [MANPREFIX=PREFIX/man]
 
-
 Legal
 -----
-
 Copyright (c) 2018, Sijmen J. Mulder (<ik@sjmulder.nl>)
 
 within is free software: you can redistribute it and/or modify it under
