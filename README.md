@@ -1,3 +1,10 @@
+This repository has **moved** to:
+
+https://codeberg.org/sjmulder/within
+
+The GitHub repository will be deleted in time.
+___
+
 within
 ======
 [![Build status](
